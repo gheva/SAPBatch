@@ -1,0 +1,111 @@
+Static libraries:
+To create a static library add it's basename to the STATIC_MODULES list
+Adding files to static modules is done by adding a directory to the module,
+this is done by defining DIR_MODULE for each subdirectory to be added.
+
+Shared libraries:
+These are created from a ilst of static libraries, first add the name of the
+shared library to the SHARED_MODULES list. Then create a list with with static
+modules to be included:
+
+SHARED_MODULES += aimos
+aimos_STATIC_MODULES += math
+
+All libraries are exported to the LIBDIR under the OUTDIR.
+
+Executables:
+Executable can have their own objects and libraries, take a look at the test_math in the following examples
+
+Exported headers:
+You can export headers by adding them to the DIR_EXPORT_HEADERS list.
+
+To use this build system you need to create a makefile at the root of the project:
+-------------------------------Makefile----------------------
+SRCDIR := src
+OUTDIR := build
+LIBDIR := lib
+EXEDIR := exe
+
+OBJ_SFX := o
+SHARED_SFX := so
+STATIC_SFX := a
+EXE_SFX := exe
+
+MKDIR := mkdir -p
+RMDIR := rm -rf
+
+BLDFILES := mk
+
+#DEBUG_MAKE := 1
+
+include $(strip ${BLDFILES})/project.mk
+-------------------------------Makefile----------------------
+
+Inside the source directory you must have a build.mk file:
+
+----------------------------src/build.mk--------------------
+include $(strip ${BLDFILES})/functions.mk
+DIR :=
+SUBDIRS += math
+
+SHARED_MODULES += aimos
+aimos_STATIC_MODULES += math
+----------------------------src/build.mk--------------------
+
+
+----------------------------src/math/build.mk--------------------
+ROOT := ../..
+DIR := $(strip ${DIR})/math
+
+STATIC_MODULES += math
+EXECUTABLES += test_math
+
+include $(strip ${BLDFILES})/header.mk
+
+DIR_SUBDIRS := algebra
+
+include $(strip ${BLDFILES})/footer.mk
+----------------------------src/math/build.mk--------------------
+
+
+----------------------------src/math/algebra/build.mk--------------------
+ROOT := ../../..
+DIR := $(strip ${DIR})/algebra
+DIR_MODULE := math
+
+include $(strip ${BLDFILES})/header.mk
+
+DIR_EXES := test_math
+
+DIR_OBJS := a
+DIR_OBJS += b
+
+test_math_OBJS += main
+test_math_LIBS := math
+test_math_LIBS := aimos
+
+DIR_EXPORT_HEADERS += g
+
+include $(strip ${BLDFILES})/footer.mk
+----------------------------src/math/algebra/build.mk--------------------
+
+The previous samples are for a directory structure with the following files:
+
+../aimos.old/nb//makefile
+../aimos.old/nb//mk
+../aimos.old/nb//mk/footer.mk
+../aimos.old/nb//mk/functions.mk
+../aimos.old/nb//mk/header.mk
+../aimos.old/nb//mk/project.mk
+../aimos.old/nb//mk/targets.mk
+../aimos.old/nb//src
+../aimos.old/nb//src/build.mk
+../aimos.old/nb//src/math
+../aimos.old/nb//src/math/algebra
+../aimos.old/nb//src/math/algebra/a.cpp
+../aimos.old/nb//src/math/algebra/b.cpp
+../aimos.old/nb//src/math/algebra/build.mk
+../aimos.old/nb//src/math/algebra/g.h
+../aimos.old/nb//src/math/algebra/main.cpp
+../aimos.old/nb//src/math/build.mk
+
