@@ -10,14 +10,29 @@ namespace sap
 
 MultiTaper::MultiTaper(int size) : size_(size)
 {
-  taper1_ = new float[size_];
-  taper2_ = new float[size_];
+  buffer_ = new float[100 + size_ * 4];
+  proTapers(size_, 4, 1.5, buffer_);
+  if (buffer_[2] < 0)
+  {
+    for (int i = 0; i < size_; ++i)
+    {
+      buffer_[i] *= -1;
+    }
+  }
+  if (buffer_[size_ + 2] < 0)
+  {
+    for (int i = size_; i < size_ * 2; ++i)
+    {
+      buffer_[i] *= -1;
+    }
+  }
+  taper1_ = buffer_;
+  taper2_ = &buffer_[size_];
 }
 
 MultiTaper::~MultiTaper()
 {
-  delete taper1_;
-  delete taper2_;
+  delete[] buffer_;
   taper1_ = taper2_ = nullptr;
 }
 

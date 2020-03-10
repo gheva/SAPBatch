@@ -26,6 +26,7 @@ private:
   int size_;
   float* taper1_;
   float* taper2_;
+  float* buffer_;
 };
 
 } // namespace
