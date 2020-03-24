@@ -7,3 +7,4 @@ src/third_party/fftw-3.3.8/FFTW3ConfigVersion.cmake
 src/third_party/fftw-3.3.8/autom4te.cache/
 src/third_party/fftw-3.3.8/fftw3.pc
 src/third_party/fftw-3.3.8/tools/fftw-wisdom.1
+src/third_party/
