@@ -382,7 +382,7 @@ L1001:
 // }}} 
 
 // {{{ jtridib_
-void jtridib_(int *n, double *eps1, double *d, double *e, double *e2, double *lb, double *ub, int *m11, int *m, double *w, int *ind, int *ierr,
+void MultiTaper::jtridib_(int *n, double *eps1, double *d, double *e, double *e2, double *lb, double *ub, int *m11, int *m, double *w, int *ind, int *ierr,
 	 double *rv4, double *rv5)
 {
 	static double   machep = 1.25e-15;
