@@ -42,7 +42,6 @@ docs: ${OUTDIR}
 	doxygen Doxyfile
 
 include make/fftw.mk
-include make/soundfile.mk
 
 .PHONY : prereq
 prereq: ${PREREQUISITES}
