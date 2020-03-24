@@ -158,7 +158,7 @@
 		 // return best local frequency estimate (is delayed by TMAX /2)
 		 //return getBestLocalEstimate();
 		 }
-		 catch(Exception & exception) {
+		 catch(std::exception & exception) {
 
 			return -999;
 		 }
@@ -166,7 +166,7 @@
 		 try{
 		   x=getBestLocalEstimate();
 		 }
-		 catch(Exception & exception) {
+		 catch(std::exception & exception) {
 
 			return -999;
 		 }
@@ -196,7 +196,7 @@
 
      }
 
-	 inline const getFrequency(int offset = 0) const {
+	 inline const int getFrequency(int offset = 0) const {
 
 		 return getSolution(offset)->freq;
 	 
