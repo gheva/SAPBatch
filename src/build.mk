@@ -5,6 +5,8 @@ DIR :=
 
 SUBDIRS += wavfile
 SUBDIRS += tapers
+SUBDIRS += yin
+SUBDIRS += apps
 
 # vim: set noexpandtab :
 
