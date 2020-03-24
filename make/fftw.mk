@@ -6,6 +6,7 @@ fftw-build:
 	${MKDIR} ${FFTW_BUILD_DIR}
 	cd ${FFTW_BUILD_DIR} && ../configure prefix=${FFTW_INSTALL_DIR}
 	cd ${FFTW_BUILD_DIR} && make && make install
+	rm -rf ${FFTW_BUILD_DIR}
 
 
 PREREQUISITES += fftw-build
