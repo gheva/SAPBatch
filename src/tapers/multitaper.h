@@ -9,6 +9,7 @@ class MultiTaper
 public:
   MultiTaper(int size);
   virtual ~MultiTaper();
+  float* operator[](unsigned int);
 protected:
 private:
   static void proTapers(int WindowSize, int tpr, float wd, float TapersOut[]);

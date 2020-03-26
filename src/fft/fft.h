@@ -12,6 +12,7 @@ public:
   virtual ~Fft();
   bool operator()();
   float* data() { return in_; }
+  int size() { return size_; }
 
 protected:
 private:

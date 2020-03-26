@@ -4,6 +4,8 @@
 #include <string>
 #include <cstdio>
 #include "AudioFile.h"
+#include "tapers/multitaper.h"
+#include "fft/fft.h"
 
 namespace sap
 {
@@ -18,9 +20,16 @@ public:
   int total_samples();
   bool fill_buffer(uint64_t offset, uint64_t size, float*);
   bool read_fully(float** ret);
+  void add_tapers(MultiTaper* tapers) { tapers_ = tapers; }
+  bool operator()(Fft& fft1, Fft& fft2);
 protected:
 private:
+
+  bool fill_buffer_taper(uint64_t offset, uint64_t size, float*, unsigned int);
+
   AudioFile<float> audio_file_;
+  MultiTaper* tapers_;
+  float* pitches_;
 };
 
 } // namespace

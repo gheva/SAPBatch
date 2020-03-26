@@ -9,6 +9,7 @@ Fft::Fft(int size)// : plan_(fftw_create_plan(size, FFTW_FORWARD, FFTW_MEASURE))
   in_ = (float*)fftw_malloc(sizeof(float) * size);
   out_ = (fftwf_complex*)fftw_malloc(sizeof(fftwf_complex) * size);
   plan_ = fftwf_plan_dft_r2c_1d(size, in_, out_, FFTW_MEASURE);
+  size_ = size;
 }
 
 Fft::~Fft()

@@ -36,6 +36,19 @@ MultiTaper::~MultiTaper()
   taper1_ = taper2_ = nullptr;
 }
 
+float* MultiTaper::operator[](unsigned int index)
+{
+  if (index == 0)
+  {
+    return taper1_;
+  }
+  if (index == 1)
+  {
+    return taper2_;
+  }
+  return nullptr;
+}
+
 void MultiTaper::proTapers(int WindowSize, int tpr, float wd, float TapersOut[])
 {
     double tapsum[10], lambda[10], *tapers;
