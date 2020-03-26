@@ -27,7 +27,6 @@ int WAVFile::total_samples()
 
 bool WAVFile::fill_buffer_taper(uint64_t offset, uint64_t size, float* buffer, unsigned int taper_index)
 {
-  // TODO handle all the cases where we end out of file
   int total = total_samples();
   for (int i = offset, j=0; j < size; ++i, ++j)
   {
@@ -87,8 +86,8 @@ bool WAVFile::operator()(Fft& fft1, Fft& fft2)
   int advance = 44;
   while (offset < total_samples())
   {
-    fill_buffer_taper(offset, sizeof(float) * fft1.size(), fft1.data(), 0);
-    fill_buffer_taper(offset, sizeof(float) * fft2.size(), fft2.data(), 1);
+    fill_buffer_taper(offset, fft1.size(), fft1.data(), 0);
+    fill_buffer_taper(offset, fft2.size(), fft2.data(), 1);
 
     if (!fft1())
     {
