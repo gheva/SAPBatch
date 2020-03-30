@@ -25,6 +25,11 @@ bool Fft::operator()()
   return true;
 }
 
+void Fft::operator()(float* in, fftwf_complex* out)
+{
+  fftwf_execute_dft_r2c(plan_, in, out);
+}
+
 } // namespace
 
 /* vim: set cindent sw=2 expandtab : */

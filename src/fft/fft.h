@@ -5,6 +5,12 @@
 namespace sap
 {
 
+struct fft_buffers
+{
+  float* in_;
+  fftwf_complex* out1_;
+  fftwf_complex* out2_;
+};
 class Fft
 {
 public:
@@ -13,6 +19,7 @@ public:
   bool operator()();
   float* data() { return in_; }
   int size() { return size_; }
+  void operator()(float* in, fftwf_complex* out);
 
 protected:
 private:
