@@ -4,7 +4,7 @@ FFTW_BUILD_DIR := $(strip ${FFTW_SOURCE_DIR})/.build
 
 fftw-build:
 	${MKDIR} ${FFTW_BUILD_DIR}
-	cd ${FFTW_BUILD_DIR} && ../configure --enable-float prefix=${FFTW_INSTALL_DIR}
+	cd ${FFTW_BUILD_DIR} && ../configure --enable-float --enable-threads prefix=${FFTW_INSTALL_DIR}
 	cd ${FFTW_BUILD_DIR} && make && make install
 	rm -rf ${FFTW_BUILD_DIR}
 
