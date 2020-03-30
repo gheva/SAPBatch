@@ -3,7 +3,7 @@
 namespace sap
 {
 
-DirectoryIterator::DirectoryIterator(const std::string& path)
+DirectoryIterator::DirectoryIterator(const std::string& path) : root_(path)
 {
 #ifdef POSIX
   directory_ = opendir(path.c_str());
@@ -44,7 +44,7 @@ std::string DirectoryIterator::_next_file()
     }
   }
 
-  return entry->d_name;
+  return root_ + "/" + entry->d_name;
 #elif defined(WIN32)
   while (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
   {

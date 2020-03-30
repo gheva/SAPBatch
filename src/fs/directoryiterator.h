@@ -21,6 +21,7 @@ protected:
 private:
   std::string _next_file();
   std::mutex mutex_;
+  std::string root_;
 #ifdef POSIX
   DIR* directory_;
 #elif defined(WIN32)

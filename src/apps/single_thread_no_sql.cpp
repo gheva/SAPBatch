@@ -29,7 +29,7 @@ int main(int argc, char** argv)
   while ((file_name = diriter.next_file()) != "")
   {
     cerr << file_name << endl;
-    WAVFile wav(root + "/" + file_name);
+    WAVFile wav(file_name);
     wav.add_tapers(&tapers);
     if (!wav(fft1, fft2))
     {
