@@ -22,6 +22,7 @@ public:
   bool read_fully(float** ret);
   void add_tapers(MultiTaper* tapers) { tapers_ = tapers; }
   bool operator()(Fft& fft1, Fft& fft2);
+  bool operator()(Fft& fft, fft_buffers& buffers);
 protected:
 private:
 
