@@ -10,7 +10,11 @@ CMAKE := cmake
 
 sysname=$(shell "uname")
 ifeq "${sysname}" "Darwin"
+ifdef WINDOWS
+include make/win.config
+else
 include make/darwin.config
+endif
 else
 include make/linux.config
 endif

@@ -1,4 +1,5 @@
 #include "yin.h"
+#include <math.h>
 
 namespace sap
 {
