@@ -1,6 +1,8 @@
 .*.swp
 /out*/
+.DS_Store
 .third_party.mac/
+.third_party.windows/
 src/third_party/fftw-3.3.8/.build/
 src/third_party/fftw-3.3.8/FFTW3Config.cmake
 src/third_party/fftw-3.3.8/FFTW3ConfigVersion.cmake
