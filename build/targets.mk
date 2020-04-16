@@ -20,7 +20,7 @@ ${OUTDIR}/%.$(strip ${OBJ_SFX}):${SRCDIR}%.c
 # Link static libraries
 %.$(strip ${STATIC_SFX}):
 	$(call MESSAGE, Linking static $@)
-	${QQ}ar cr $@ $^
+	${QQ}${AR} cr $@ $^
 
 # Copy exported headers
 $(strip ${INCLUDIR})/%.h:${SRCDIR}%.h
