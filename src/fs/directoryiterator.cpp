@@ -8,7 +8,8 @@ DirectoryIterator::DirectoryIterator(const std::string& path) : root_(path)
 #ifdef POSIX
   directory_ = opendir(path.c_str());
 #elif defined(WIN32)
-  directory_ = FindFirstFile(path, &FindFileData);;
+  std::string root = path + "\\*";
+  directory_ = FindFirstFile(root.c_str(), &FindFileData);;
 #endif
 }
 
@@ -53,9 +54,11 @@ std::string DirectoryIterator::_next_file()
       return "";
     }
   }
-  // TODO this is not going to work and needs to be tested
-  std::sting ret = FindFileData.cFileName;
-  FindNextFile(directory_, &FindFileData);
+  std::string ret = root_ + "\\" + FindFileData.cFileName;
+  if (FindNextFile(directory_, &FindFileData) == 0)
+  {
+    return "";
+  }
   return ret;
 #endif
 }
