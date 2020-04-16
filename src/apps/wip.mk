@@ -10,7 +10,6 @@ wip_MODULES += tapers
 wip_MODULES += fft
 wip_FLAGS += -L$(strip ${THIRD_PARTY_BUILD})/fftw/lib 
 wip_FLAGS += -lfftw3f
-wip_FLAGS += -lfftw3
 
 # vim: set noexpandtab :
 
