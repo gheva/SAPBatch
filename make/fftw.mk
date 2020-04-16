@@ -13,6 +13,11 @@ fftw-build:
 	cd ${FFTW_INSTALL_DIR} && mv libfftw3f-3.dll lib/libfftw3f.dll
 	cd ${FFTW_INSTALL_DIR} && mv fftw3.h include
 
+# The following does not work, ends up with undefiend references
+#	${MKDIR} ${FFTW_BUILD_DIR}
+#	cd ${FFTW_BUILD_DIR} && ../configure --enable-float --enable-threads prefix=${FFTW_INSTALL_DIR} --disable-alloca --with-our-malloc16 --with-combined-threads --with-incoming-stack-boundary=2 --enable-sse2 --enable-shared CC=${CC} CXX=${CXX} CXXFLAGS="${CXXFLAGS}" --target=x86_64-mingw32msvc --host=x86_64
+#	cd ${FFTW_BUILD_DIR} && CC="${CC}" CXX="${CXX}" CXXFLAGS="${CXXFLAGS}" LDFLAGS="{$CXXFLAGS}" make && make install
+#	rm -rf ${FFTW_BUILD_DIR}
 else
 fftw-build:
 	${MKDIR} ${FFTW_BUILD_DIR}
