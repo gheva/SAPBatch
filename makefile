@@ -46,6 +46,7 @@ docs: ${OUTDIR}
 	doxygen Doxyfile
 
 include make/fftw.mk
+include make/mysql.mk
 
 .PHONY : prereq
 prereq: ${PREREQUISITES}
