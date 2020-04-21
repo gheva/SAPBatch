@@ -30,6 +30,7 @@ public:
     TYPE_STRING,
   };
   Record(const std::string& table);
+  virtual ~Record();
 
   void add_column(std::string name, types type);
 

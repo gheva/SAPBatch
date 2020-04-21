@@ -9,6 +9,14 @@ Record::Record(const std::string& table) : table_(table)
 {
 }
 
+Record::~Record()
+{
+  for (int i = 0; i < ordered_columns_.size(); ++i)
+  {
+    delete ordered_columns_[i];
+  }
+}
+
 void Record::add_column(std::string name, types type)
 {
   switch (type)
@@ -74,7 +82,6 @@ bool Record::insert(MySQL& connection)
     delim = ",";
   }
   ss << ")";
-  std::cerr << ss.str() << std::endl;
   return connection.run(ss.str());
 }
 

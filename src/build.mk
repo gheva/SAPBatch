@@ -9,6 +9,7 @@ SUBDIRS += yin
 SUBDIRS += fft
 SUBDIRS += fs
 SUBDIRS += sql
+SUBDIRS += thread
 SUBDIRS += apps
 
 # vim: set noexpandtab :

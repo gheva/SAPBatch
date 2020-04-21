@@ -6,9 +6,12 @@
 #include "AudioFile.h"
 #include "tapers/multitaper.h"
 #include "fft/fft.h"
+#include "sql/millisecondtable.h"
 
 namespace sap
 {
+
+class SynQueue;
 
 class WAVFile
 {
@@ -23,6 +26,7 @@ public:
   void add_tapers(MultiTaper* tapers) { tapers_ = tapers; }
   bool operator()(Fft& fft1, Fft& fft2);
   bool operator()(Fft& fft, fft_buffers& buffers);
+  bool operator()(Fft& fft, fft_buffers& buffers, SynQueue& write_queue);
 protected:
 private:
 
@@ -31,6 +35,8 @@ private:
   AudioFile<float> audio_file_;
   MultiTaper* tapers_;
   float* pitches_;
+  MillisecondTable table_;
+  std::string file_name_;
 };
 
 } // namespace

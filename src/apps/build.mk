@@ -9,6 +9,7 @@ $(call ADD_EXE, multi_thread_no_sql)
 $(call ADD_EXE, timing_no_sql)
 $(call ADD_EXE, simple_sql)
 $(call ADD_EXE, second_sql)
+$(call ADD_EXE, sap_batch)
 DIR_COMPILATION_FLAGS += -I$(abspath $(strip ${THIRD_PARTY_BUILD})/mysql/include)
 
 include $(strip ${BLDFILES})/footer.mk
