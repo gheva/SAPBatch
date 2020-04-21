@@ -61,8 +61,8 @@ void multi_thread_run(const string& root, int thread_count, MySQL& connection)
   vector<fft_buffers*> buffers;
   SynQueue queue;
 
-  pool.emplace_back(sql_writer_thread, std::ref(connection), std::ref(queue));
-  for (int i = 0; i < thread_count - 1; ++i)
+  //pool.emplace_back(sql_writer_thread, std::ref(connection), std::ref(queue));
+  for (int i = 0; i < thread_count; ++i)
   {
     fft_buffers* tmp = new fft_buffers;;
     tmp->in_ = (float*)fftwf_malloc(sizeof(float) * window_size);
@@ -72,11 +72,13 @@ void multi_thread_run(const string& root, int thread_count, MySQL& connection)
     pool.emplace_back(thread_function, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(queue));
   }
 
+  sql_writer_thread(connection, queue);
+
   for (int i = 0; i < thread_count; ++i)
   {
     pool[i].join();
     if (i == 0) continue;
-    fft_buffers* tmp = buffers[i-1];
+    fft_buffers* tmp = buffers[i];
     fftwf_free(tmp->in_);
     fftwf_free(tmp->out1_);
     fftwf_free(tmp->out2_);
