@@ -33,15 +33,27 @@ void thread_function(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int 
   }
 }
 
+void thread_function2(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
+{
+  string file_name;
+  while ((file_name = iter.next_file()) != "")
+  {
+    cerr << file_name << "(" << id << ")" << endl;
+
+    WAVFile wav(file_name, "Milliseconds2");
+    wav.add_tapers(tapers);
+    wav(fft, *buffers, connection);
+  }
+}
+
+
 void sql_writer_thread(MySQL& connection, SynQueue& queue)
 {
-  cerr << "here " << runners;
-  while (runners > 0)
+  while (true)
   {
     Record* record = queue.dequeue();
     if (record == nullptr)
     {
-      cerr << "here";
       break;
     }
     if (!record->insert(connection))
@@ -87,6 +99,39 @@ void multi_thread_run(const string& root, int thread_count, MySQL& connection)
   delete tapers;
 }
 
+void multi_thread_run2(const string& root, int thread_count, vector<MySQL*>& connections)
+{
+  DirectoryIterator diriter(root);
+  int window_size(44);
+  Fft fft(window_size);
+  MultiTaper* tapers = new MultiTaper(window_size);
+  vector<std::thread> pool;
+  vector<fft_buffers*> buffers;
+  SynQueue queue;
+
+  for (int i = 0; i < thread_count; ++i)
+  {
+    fft_buffers* tmp = new fft_buffers;;
+    tmp->in_ = (float*)fftwf_malloc(sizeof(float) * window_size);
+    tmp->out1_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
+    tmp->out2_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
+    buffers.push_back(tmp);
+    pool.emplace_back(thread_function2, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(*connections[i]));
+  }
+
+  for (int i = 0; i < thread_count; ++i)
+  {
+    pool[i].join();
+    fft_buffers* tmp = buffers[i];
+    fftwf_free(tmp->in_);
+    fftwf_free(tmp->out1_);
+    fftwf_free(tmp->out2_);
+    delete tmp;
+  }
+  delete tapers;
+}
+
+
 int main(int argc, char** argv)
 {
   if (argc < 5)
@@ -113,7 +158,27 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
   
+  Table<MillisecondRecord> milisecond_table2("Milliseconds2");
+  if (!milisecond_table2.create(connection))
+  {
+    cerr << connection.error() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  time_t start1 = time(nullptr);
   multi_thread_run(root, thread_count, connection);
+  time_t end1 = time(nullptr);
+  vector<MySQL*> connections;
+  for (int i = 0; i < thread_count; ++i)
+  {
+    connections.push_back(new MySQL(argv[2], argv[3], argv[4]));
+  }
+  time_t start2 = time(nullptr);
+  multi_thread_run2(root, thread_count, connections);
+  time_t end2 = time(nullptr);
+
+  cout << "Single sql thread took " << end1 - start1 << " seconds" << endl;
+  cout << "Each thread writes to table took " << end2 - start2 << " seconds" << endl;
 
   exit(EXIT_SUCCESS);
 }
