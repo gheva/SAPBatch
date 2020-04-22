@@ -29,7 +29,7 @@ Record* SynQueue::dequeue()
   std::unique_lock<std::mutex> lock(mutex_);
   while(queue_.empty())
   {
-    if (done_)
+    if (done_ && queue_.empty())
     {
       return nullptr;
     }
