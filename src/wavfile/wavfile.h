@@ -16,7 +16,7 @@ class SynQueue;
 class WAVFile
 {
 public:
-  WAVFile(const std::string& file_name);
+  WAVFile(const std::string& file_name, const std::string& table_name="Milliseconds");
   virtual ~WAVFile();
 
   int sample_rate();
@@ -27,6 +27,7 @@ public:
   bool operator()(Fft& fft1, Fft& fft2);
   bool operator()(Fft& fft, fft_buffers& buffers);
   bool operator()(Fft& fft, fft_buffers& buffers, SynQueue& write_queue);
+  bool operator()(Fft& fft, fft_buffers& buffers, MySQL& connection);
 protected:
 private:
 
