@@ -11,29 +11,9 @@
 using namespace sap;
 using namespace std;
 
-int runners;
 mutex lock_;
 
-void thread_function(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, SynQueue& queue)
-{
-  string file_name;
-  while ((file_name = iter.next_file()) != "")
-  {
-    cerr << file_name << "(" << id << ")" << endl;
-
-    WAVFile wav(file_name);
-    wav.add_tapers(tapers);
-    wav(fft, *buffers, queue);
-  }
-  std::lock_guard<std::mutex> lock(lock_);
-  --runners;
-  if (runners == 0)
-  {
-    queue.done();
-  }
-}
-
-void thread_function2(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
+void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
 {
   string file_name;
   while ((file_name = iter.next_file()) != "")
@@ -46,60 +26,7 @@ void thread_function2(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int
   }
 }
 
-
-void sql_writer_thread(MySQL& connection, SynQueue& queue)
-{
-  while (true)
-  {
-    Record* record = queue.dequeue();
-    if (record == nullptr)
-    {
-      break;
-    }
-    if (!record->insert(connection))
-    {
-      cerr << connection.error() << endl;
-    }
-  }
-}
-
-void multi_thread_run(const string& root, int thread_count, MySQL& connection)
-{
-  DirectoryIterator diriter(root);
-  int window_size(44);
-  Fft fft(window_size);
-  MultiTaper* tapers = new MultiTaper(window_size);
-  vector<std::thread> pool;
-  vector<fft_buffers*> buffers;
-  SynQueue queue;
-
-  //pool.emplace_back(sql_writer_thread, std::ref(connection), std::ref(queue));
-  for (int i = 0; i < thread_count; ++i)
-  {
-    fft_buffers* tmp = new fft_buffers;;
-    tmp->in_ = (float*)fftwf_malloc(sizeof(float) * window_size);
-    tmp->out1_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
-    tmp->out2_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
-    buffers.push_back(tmp);
-    pool.emplace_back(thread_function, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(queue));
-  }
-
-  sql_writer_thread(connection, queue);
-
-  for (int i = 0; i < thread_count; ++i)
-  {
-    pool[i].join();
-    if (i == 0) continue;
-    fft_buffers* tmp = buffers[i];
-    fftwf_free(tmp->in_);
-    fftwf_free(tmp->out1_);
-    fftwf_free(tmp->out2_);
-    delete tmp;
-  }
-  delete tapers;
-}
-
-void multi_thread_run2(const string& root, int thread_count, vector<MySQL*>& connections)
+void process(const string& root, int thread_count, vector<MySQL*>& connections)
 {
   DirectoryIterator diriter(root);
   int window_size(44);
@@ -116,7 +43,7 @@ void multi_thread_run2(const string& root, int thread_count, vector<MySQL*>& con
     tmp->out1_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
     tmp->out2_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
     buffers.push_back(tmp);
-    pool.emplace_back(thread_function2, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(*connections[i]));
+    pool.emplace_back(processor, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(*connections[i]));
   }
 
   for (int i = 0; i < thread_count; ++i)
@@ -130,7 +57,6 @@ void multi_thread_run2(const string& root, int thread_count, vector<MySQL*>& con
   }
   delete tapers;
 }
-
 
 int main(int argc, char** argv)
 {
@@ -149,7 +75,6 @@ int main(int argc, char** argv)
   {
     thread_count = 4;
   }
-  runners = thread_count - 1;
   MySQL connection(argv[2], argv[3], argv[4]);
   Table<MillisecondRecord> milisecond_table("Milliseconds");
   if (!milisecond_table.create(connection))
@@ -158,28 +83,21 @@ int main(int argc, char** argv)
     exit(EXIT_FAILURE);
   }
   
-  Table<MillisecondRecord> milisecond_table2("Milliseconds2");
-  if (!milisecond_table2.create(connection))
-  {
-    cerr << connection.error() << endl;
-    exit(EXIT_FAILURE);
-  }
-
-  time_t start1 = time(nullptr);
-  multi_thread_run(root, thread_count, connection);
-  time_t end1 = time(nullptr);
   vector<MySQL*> connections;
   for (int i = 0; i < thread_count; ++i)
   {
     connections.push_back(new MySQL(argv[2], argv[3], argv[4]));
   }
-  time_t start2 = time(nullptr);
-  multi_thread_run2(root, thread_count, connections);
-  time_t end2 = time(nullptr);
+  time_t start = time(nullptr);
+  process(root, thread_count, connections);
+  time_t end = time(nullptr);
 
-  cout << "Single sql thread took " << end1 - start1 << " seconds" << endl;
-  cout << "Each thread writes to table took " << end2 - start2 << " seconds" << endl;
+  cout << "Runtime took " << end - start << " seconds" << endl;
 
+  for (int i = 0; i < thread_count; ++i)
+  {
+    delete connections[i];
+  }
   exit(EXIT_SUCCESS);
 }
 
