@@ -45,6 +45,20 @@ include $(strip ${BLDFILES})/project.mk
 docs: ${OUTDIR}
 	doxygen Doxyfile
 
+package_windows: all
+	mkdir sap_batch
+	cp out.windows/exe/sap_batch.exe sap_batch/
+	cp .third_party.windows/fftw/lib/libfftw3f.dll sap_batch/libfftw3f-3.dll
+	cp .third_party.windows/fftw/lib/libfftw3.dll sap_batch/libfftw3-3.dll
+	cp .third_party.windows/mysql/lib/libmysql.dll sap_batch/libmysql.dll
+	cp /usr/local//Cellar/mingw-w64/7.0.0_2/toolchain-x86_64/x86_64-w64-mingw32/bin/libwinpthread-1.dll sap_batch/
+	unzip src/third_party/openssl-1.1.1g-win64-mingw.zip openssl-1.1.1g-win64-mingw/libssl-1_1-x64.dll
+	unzip src/third_party/openssl-1.1.1g-win64-mingw.zip openssl-1.1.1g-win64-mingw/libcrypto-1_1-x64.dll
+	mv openssl-1.1.1g-win64-mingw/* sap_batch/
+	rmdir openssl-1.1.1g-win64-mingw
+	zip -9 sap_batch.zip -r sap_batch
+	rm -rf sap_batch
+
 include make/fftw.mk
 include make/mysql.mk
 
