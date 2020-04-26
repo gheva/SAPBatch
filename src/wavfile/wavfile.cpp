@@ -210,8 +210,11 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
     record->set("pitch", pitches_[i]);
     if (!record->insert(connection))
     {
-      std::cerr << connection.error() << std::endl;
-      // TODO
+      if (!record->insert(connection))
+      {
+        std::cerr << connection.error() << std::endl;
+        std::cerr << file_name_ << "," << i << "," << pitches_[i] << std::endl;
+      }
     }
   }
   return true;
