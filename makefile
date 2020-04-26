@@ -7,7 +7,7 @@ LIBDIR := lib
 EXEDIR := exe
 THIRD_PARTY_SOURCE := src/third_party
 CMAKE := cmake
-
+ZIPFILE_NAME := sap_batch_0.0.1.zip
 sysname=$(shell "uname")
 ifeq "${sysname}" "Darwin"
 ifdef WINDOWS
@@ -56,7 +56,7 @@ package_windows: all
 	unzip src/third_party/openssl-1.1.1g-win64-mingw.zip openssl-1.1.1g-win64-mingw/libcrypto-1_1-x64.dll
 	mv openssl-1.1.1g-win64-mingw/* sap_batch/
 	rmdir openssl-1.1.1g-win64-mingw
-	zip -9 sap_batch.zip -r sap_batch
+	zip -9 ${ZIPFILE_NAME} -r sap_batch
 	rm -rf sap_batch
 
 include make/fftw.mk
