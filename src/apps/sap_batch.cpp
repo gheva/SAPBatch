@@ -20,7 +20,7 @@ void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, ff
   {
     cerr << file_name << "(" << id << ")" << endl;
 
-    WAVFile wav(file_name, "Milliseconds2");
+    WAVFile wav(file_name, "Milliseconds");
     wav.add_tapers(tapers);
     wav(fft, *buffers, connection);
   }
