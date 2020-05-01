@@ -1,13 +1,14 @@
 #include "wavfile.h"
 #include <iostream>
 #include <cstdio>
+#include <cmath>
 #include "yin/yin.h"
 #include "thread/synqueue.h"
 
 namespace sap
 {
 
-WAVFile::WAVFile(const std::string& path, const std::string& table) : table_(table), file_name_(path)
+WAVFile::WAVFile(const std::string& path, const std::string& table) : table_(table), file_name_(path), nans_(0)
 {
   audio_file_.load(path);
 }
@@ -68,7 +69,7 @@ bool WAVFile::read_fully(float** ret)
 
 bool WAVFile::operator()(Fft& fft1, Fft& fft2)
 {
-  Yin yin(*this, 400);
+  Yin yin(*this, 300);
   float* result;
   bool ret = yin(&result);
   if (!ret)
@@ -106,7 +107,7 @@ bool WAVFile::operator()(Fft& fft1, Fft& fft2)
 
 bool WAVFile::operator()(Fft& fft, fft_buffers& buffers)
 {
-  Yin yin(*this, 400);
+  Yin yin(*this, 300);
   float* result;
   bool ret = yin(&result);
   if (!ret)
@@ -137,7 +138,7 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers)
 
 bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, SynQueue& write_queue)
 {
-  Yin yin(*this, 400);
+  Yin yin(*this, 300);
   float* result;
   bool ret = yin(&result);
   if (!ret)
@@ -176,7 +177,7 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, SynQueue& write_queue)
 
 bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
 {
-  Yin yin(*this, 400);
+  Yin yin(*this, 300);
   float* result;
   bool ret = yin(&result);
   if (!ret)
@@ -207,14 +208,17 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
     MillisecondRecord* record = table_.new_record();
     record->set("file", file_name_);
     record->set("index_in_file", i);
+    if (std::isnan(pitches_[i]))
+    {
+      ++nans_;
+      pitches_[i] = 0.0;
+    }
+        
     record->set("pitch", pitches_[i]);
     if (!record->insert(connection))
     {
-      if (!record->insert(connection))
-      {
-        std::cerr << connection.error() << std::endl;
-        std::cerr << file_name_ << "," << i << "," << pitches_[i] << std::endl;
-      }
+      std::cerr << connection.error() << std::endl;
+      std::cerr << file_name_ << "," << i << "," << pitches_[i] << std::endl;
     }
   }
   return true;

@@ -28,6 +28,7 @@ public:
   bool operator()(Fft& fft, fft_buffers& buffers);
   bool operator()(Fft& fft, fft_buffers& buffers, SynQueue& write_queue);
   bool operator()(Fft& fft, fft_buffers& buffers, MySQL& connection);
+  int nans() { return nans_; }
 protected:
 private:
 
@@ -38,6 +39,7 @@ private:
   float* pitches_;
   MillisecondTable table_;
   std::string file_name_;
+  int nans_;
 };
 
 } // namespace

@@ -12,6 +12,7 @@ using namespace sap;
 using namespace std;
 
 mutex lock_;
+int* nans;
 
 void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
 {
@@ -23,6 +24,7 @@ void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, ff
     WAVFile wav(file_name, "Milliseconds");
     wav.add_tapers(tapers);
     wav(fft, *buffers, connection);
+    nans[id] += wav.nans();
   }
 }
 
@@ -35,6 +37,7 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
   vector<std::thread> pool;
   vector<fft_buffers*> buffers;
   SynQueue queue;
+  nans = new int[thread_count];
 
   for (int i = 0; i < thread_count; ++i)
   {
@@ -46,8 +49,10 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
     pool.emplace_back(processor, std::ref(diriter), std::ref(fft), tapers, i, buffers[i], std::ref(*connections[i]));
   }
 
+  int nan = 0;
   for (int i = 0; i < thread_count; ++i)
   {
+    nan += nans[i];
     pool[i].join();
     fft_buffers* tmp = buffers[i];
     fftwf_free(tmp->in_);
@@ -55,6 +60,9 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
     fftwf_free(tmp->out2_);
     delete tmp;
   }
+  cout << "nans encountered " << nan << endl;
+
+  delete[] nans;
   delete tapers;
 }
 
