@@ -3,7 +3,7 @@
 namespace sap
 {
 
-DirectoryIterator::DirectoryIterator(const std::string& path) : root_(path)
+DirectoryIterator::DirectoryIterator(const std::string& path) : root_(path), index_(0)
 {
 #ifdef POSIX
   directory_ = opendir(path.c_str());
@@ -22,43 +22,51 @@ DirectoryIterator::~DirectoryIterator()
 #endif
 }
 
-std::string DirectoryIterator::next_file()
+DirectoryIterator::iterator* DirectoryIterator::next_file()
 {
   const std::lock_guard<std::mutex> lock(mutex_);
   return _next_file();
 }
 
-std::string DirectoryIterator::_next_file()
+DirectoryIterator::iterator* DirectoryIterator::_next_file()
 {
 #ifdef POSIX
   struct dirent* entry = readdir(directory_);
   if (entry == nullptr)
   {
-    return "";
+    return nullptr;
   }
   while (entry->d_name[0] == '.')
   {
     entry = readdir(directory_);
     if (entry == nullptr)
     {
-      return "";
+      return nullptr;
     }
   }
+  iterator* ret = new iterator;
+  ret->file_name = entry->d_name;
+  ret->file_path = root_ + "/" + entry->d_name;
+  ret->file_index = ++index_;
 
-  return root_ + "/" + entry->d_name;
+  return ret;
 #elif defined(WIN32)
   while (FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
   {
     if (FindNextFile(directory_, &FindFileData) == 0)
     {
-      return "";
+      return nullptr;
     }
   }
-  std::string ret = root_ + "\\" + FindFileData.cFileName;
+  iterator* ret = new iterator;
+  ret->file_name = FindFileData.cFileName;
+  ret->file_path = root_ + "/" + FindFileData.cFileName;
+  ret->file_index = ++index_;
   if (FindNextFile(directory_, &FindFileData) == 0)
   {
-    return "";
+    return nullptr;
   }
+
   return ret;
 #endif
 }

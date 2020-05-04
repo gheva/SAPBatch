@@ -16,15 +16,16 @@ int* nans;
 
 void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
 {
-  string file_name;
-  while ((file_name = iter.next_file()) != "")
+  DirectoryIterator::iterator* ptr;
+  while ((ptr = iter.next_file()) != nullptr)
   {
-    cerr << file_name << "(" << id << ")" << endl;
+    cerr << ptr->file_name << "(" << id << ")" << endl;
 
-    WAVFile wav(file_name, "Milliseconds");
+    WAVFile wav(ptr, "Milliseconds");
     wav.add_tapers(tapers);
     wav(fft, *buffers, connection);
     nans[id] += wav.nans();
+    delete ptr;
   }
 }
 
@@ -41,6 +42,7 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
 
   for (int i = 0; i < thread_count; ++i)
   {
+    nans[i] = 0;
     fft_buffers* tmp = new fft_buffers;;
     tmp->in_ = (float*)fftwf_malloc(sizeof(float) * window_size);
     tmp->out1_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);

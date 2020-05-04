@@ -1,5 +1,6 @@
 #include "wavfile.h"
 #include <iostream>
+#include <sstream>
 #include <cstdio>
 #include <cmath>
 #include "yin/yin.h"
@@ -8,9 +9,12 @@
 namespace sap
 {
 
-WAVFile::WAVFile(const std::string& path, const std::string& table) : table_(table), file_name_(path), nans_(0)
+WAVFile::WAVFile(DirectoryIterator::iterator* iter, const std::string& table) : table_(table), file_name_(iter->file_name), nans_(0)
 {
-  audio_file_.load(path);
+  audio_file_.load(iter->file_path);
+  auto siter = file_name_.find('_');
+  bird_id_ = file_name_.substr(0, siter);
+  sscanf(file_name_.substr(siter).c_str(), "_%d.%lld_%d_%d_%d_%d_%d.wav", &serial_number_, &ms_from_midnight_, &month_, &day_, &hour_, &minute_, &second_);
 }
 
 WAVFile::~WAVFile()

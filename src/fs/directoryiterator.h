@@ -15,14 +15,21 @@ namespace sap
 class DirectoryIterator
 {
 public:
+  struct iterator
+  {
+    std::string file_name;
+    std::string file_path;
+    std::string file_index;
+  };
   DirectoryIterator(const std::string& path);
   virtual ~DirectoryIterator();
-  std::string next_file();
+  iterator* next_file();
 protected:
 private:
-  std::string _next_file();
+  iterator* _next_file();
   std::mutex mutex_;
   std::string root_;
+  unsigned int index_;
 #ifdef POSIX
   DIR* directory_;
 #elif defined(WIN32)
