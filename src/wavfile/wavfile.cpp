@@ -9,12 +9,19 @@
 namespace sap
 {
 
-WAVFile::WAVFile(DirectoryIterator::iterator* iter, const std::string& table) : table_(table), file_name_(iter->file_name), nans_(0)
+WAVFile::WAVFile(DirectoryIterator::iterator* iter, const std::string& ms_table, const std::string& file_table_name) : ms_table_(ms_table), file_table_(file_table_name), file_name_(iter->file_name), nans_(0), file_index_(iter->file_index)
 {
   audio_file_.load(iter->file_path);
   auto siter = file_name_.find('_');
   bird_id_ = file_name_.substr(0, siter);
   sscanf(file_name_.substr(siter).c_str(), "_%d.%lld_%d_%d_%d_%d_%d.wav", &serial_number_, &ms_from_midnight_, &month_, &day_, &hour_, &minute_, &second_);
+
+  record_ = file_table_.new_record();
+  record_->set("file_index", file_index_);
+  record_->set("bird_ID", bird_id_);
+  record_->set("file_name", iter->file_name);
+  record_->set("file_age", 0.0);
+  record_->set("bird_age", 0.0);
 }
 
 WAVFile::~WAVFile()
@@ -80,6 +87,12 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
   {
     return ret;
   }
+  if (!record_->insert(connection))
+  {
+    std::cerr << connection.error() << std::endl;
+    std::cerr << "Failed to insert the file record for " << file_name_ << std::endl;
+  }
+  delete record_;
   int slices = float(total_samples())/44.1;
   pitches_ = new float[slices];
   float sr = sample_rate();
@@ -101,8 +114,8 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
 
   for (int i = 0; i < slices; ++i)
   {
-    MillisecondRecord* record = table_.new_record();
-    record->set("file", file_name_);
+    MillisecondRecord* record = ms_table_.new_record();
+    record->set("file_index", file_index_);
     record->set("index_in_file", i);
     if (std::isnan(pitches_[i]))
     {

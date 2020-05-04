@@ -10,6 +10,7 @@ DIR_OBJS := mysql
 DIR_OBJS += column
 DIR_OBJS += table
 DIR_OBJS += millisecondtable
+DIR_OBJS += filetable
 DIR_COMPILATION_FLAGS += -I$(abspath $(strip ${THIRD_PARTY_BUILD})/mysql/include)
 
 include $(strip ${BLDFILES})/footer.mk

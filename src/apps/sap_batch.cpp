@@ -7,6 +7,7 @@
 #include <vector>
 #include <thread>
 #include "thread/synqueue.h"
+#include "sql/filetable.h"
 
 using namespace sap;
 using namespace std;
@@ -21,7 +22,7 @@ void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, ff
   {
     cerr << ptr->file_name << "(" << id << ")" << endl;
 
-    WAVFile wav(ptr, "Milliseconds");
+    WAVFile wav(ptr, "Milliseconds", "FileTable");
     wav.add_tapers(tapers);
     wav(fft, *buffers, connection);
     nans[id] += wav.nans();
@@ -88,6 +89,13 @@ int main(int argc, char** argv)
   MySQL connection(argv[2], argv[3], argv[4]);
   Table<MillisecondRecord> milisecond_table("Milliseconds");
   if (!milisecond_table.create(connection))
+  {
+    cerr << connection.error() << endl;
+    exit(EXIT_FAILURE);
+  }
+
+  FileTable file_table("FileTable");
+  if (!file_table.create(connection))
   {
     cerr << connection.error() << endl;
     exit(EXIT_FAILURE);

@@ -7,6 +7,7 @@
 #include "tapers/multitaper.h"
 #include "fft/fft.h"
 #include "sql/millisecondtable.h"
+#include "sql/filetable.h"
 #include "fs/directoryiterator.h"
 
 namespace sap
@@ -17,7 +18,7 @@ class SynQueue;
 class WAVFile
 {
 public:
-  WAVFile(DirectoryIterator::iterator* iter, const std::string& table_name="Milliseconds");
+  WAVFile(DirectoryIterator::iterator* iter, const std::string& ms_table_name="Milliseconds", const std::string& file_table_name="FileTable");
   virtual ~WAVFile();
 
   int sample_rate();
@@ -35,8 +36,11 @@ private:
   AudioFile<float> audio_file_;
   MultiTaper* tapers_;
   float* pitches_;
-  MillisecondTable table_;
+  MillisecondTable ms_table_;
+  FileTable file_table_;
+  FileRecord* record_;
   std::string file_name_;
+  int file_index_;
   int nans_;
 
   std::string bird_id_;

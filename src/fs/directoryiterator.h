@@ -19,7 +19,7 @@ public:
   {
     std::string file_name;
     std::string file_path;
-    std::string file_index;
+    int file_index;
   };
   DirectoryIterator(const std::string& path);
   virtual ~DirectoryIterator();
