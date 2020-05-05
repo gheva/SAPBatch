@@ -78,7 +78,7 @@ bool WAVFile::read_fully(float** ret)
   return true;
 }
 
-bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
+bool WAVFile::calculate_pitchse()
 {
   Yin yin(*this, 300);
   float* result;
@@ -87,13 +87,11 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
   {
     return ret;
   }
-  if (!record_->insert(connection))
-  {
-    std::cerr << connection.error() << std::endl;
-    std::cerr << "Failed to insert the file record for " << file_name_ << std::endl;
-  }
-  delete record_;
   int slices = float(total_samples())/44.1;
+  if (pitches_ != nullptr)
+  {
+    delete[] pitches_;
+  }
   pitches_ = new float[slices];
   float sr = sample_rate();
   float div = 44.1;
@@ -101,35 +99,83 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
   {
     pitches_[i] = sr * result[int(div * (float)i)];
   }
-  int offset = 0;
-  int advance = 44;
-  while (offset < total_samples())
-  {
-    fill_buffer_taper(offset, fft.size(), buffers.in_, 0);
-    fft(buffers.in_, buffers.out1_);
-    fill_buffer_taper(offset, fft.size(), buffers.in_, 1);
-    fft(buffers.in_, buffers.out2_);
-    offset += fft.size();
-  }
+  return true;
+}
 
-  for (int i = 0; i < slices; ++i)
+void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
+{
+  fill_buffer_taper(offset, fft.size(), buffers.in_, 0);
+  fft(buffers.in_, buffers.out1_);
+  fill_buffer_taper(offset, fft.size(), buffers.in_, 1);
+  fft(buffers.in_, buffers.out2_);
+
+  // 260 = spectrum range
+  for (int i = 0; i < 260; ++i)
   {
-    MillisecondRecord* record = ms_table_.new_record();
-    record->set("file_index", file_index_);
-    record->set("index_in_file", i);
-    if (std::isnan(pitches_[i]))
+    float fReal1, fReal2, fImag1, fImag2;
+
+    fReal1 = buffers.out1_[i][0];
+    fImag1 = buffers.out1_[i][1];
+    fReal2 = buffers.out2_[i][0];
+    fImag2 = buffers.out2_[i][1];
+    float power_spec_i = fReal1 * fReal1 + fReal2 * fReal2 + fImag1 * fImag1 + fImag2 * fImag2;
+    power_spectrum_.push_back(power_spec_i);
+    float time_deriv_i = -fReal1 * fReal2 - fImag1 * fImag2; 
+    float freq_deriv_i = fImag1 * fReal2 - fReal1 * fImag2;
+    // TODO Sono
+  }
+}
+
+void WAVFile::store_frame(int frame, MySQL& connection)
+{
+  int slices = float(total_samples())/44.1;
+  MillisecondRecord* record = ms_table_.new_record();
+  record->set("file_index", file_index_);
+  record->set("index_in_file", frame);
+  if (frame >= slices)
+  {
+    record->set("pitch", 0.0);
+  }
+  else
+  {
+    if (std::isnan(pitches_[frame]))
     {
       ++nans_;
-      pitches_[i] = 0.0;
+      pitches_[frame] = 0.0;
     }
         
-    record->set("pitch", pitches_[i]);
-    if (!record->insert(connection))
-    {
-      std::cerr << connection.error() << std::endl;
-      std::cerr << file_name_ << "," << i << "," << pitches_[i] << std::endl;
-    }
+    record->set("pitch", pitches_[frame]);
   }
+  if (!record->insert(connection))
+  {
+    std::cerr << connection.error() << std::endl;
+    std::cerr << file_name_ << "," << frame << "," << pitches_[frame] << std::endl;
+  }
+}
+
+bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
+{
+  if (!record_->insert(connection))
+  {
+    std::cerr << connection.error() << std::endl;
+    std::cerr << "Failed to insert the file record for " << file_name_ << std::endl;
+  }
+  delete record_;
+  if (!calculate_pitchse())
+  {
+    return false;
+  }
+  int offset = 0;
+  int advance = 44;
+  int index = 0;
+  while (offset < total_samples())
+  {
+    calculate_frame(fft, buffers, offset);
+    store_frame(index, connection);
+    offset += fft.size();
+    ++index;
+  }
+
   return true;
 }
 

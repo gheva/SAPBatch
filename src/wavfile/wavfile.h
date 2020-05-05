@@ -3,6 +3,7 @@
 
 #include <string>
 #include <cstdio>
+#include <vector>
 #include "AudioFile.h"
 #include "tapers/multitaper.h"
 #include "fft/fft.h"
@@ -32,6 +33,9 @@ protected:
 private:
 
   bool fill_buffer_taper(uint64_t offset, uint64_t size, float*, unsigned int);
+  bool calculate_pitchse();
+  void calculate_frame(Fft& fft, fft_buffers& buffers, int offset);
+  void store_frame(int frame, MySQL& connection);
 
   AudioFile<float> audio_file_;
   MultiTaper* tapers_;
@@ -51,6 +55,9 @@ private:
   int hour_;
   int minute_;
   int second_;
+  std::vector<float> power_spectrum_;
+  std::vector<float> time_derivative_;
+  std::vector<float> freq_derivative_;
 };
 
 } // namespace
