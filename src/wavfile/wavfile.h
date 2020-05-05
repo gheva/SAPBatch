@@ -39,7 +39,7 @@ private:
 
   AudioFile<float> audio_file_;
   MultiTaper* tapers_;
-  float* pitches_;
+  std::vector<float> pitches_;
   MillisecondTable ms_table_;
   FileTable file_table_;
   FileRecord* record_;

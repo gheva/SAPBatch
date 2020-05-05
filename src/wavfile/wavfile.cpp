@@ -88,16 +88,12 @@ bool WAVFile::calculate_pitchse()
     return ret;
   }
   int slices = float(total_samples())/44.1;
-  if (pitches_ != nullptr)
-  {
-    delete[] pitches_;
-  }
-  pitches_ = new float[slices];
+  pitches_.clear();
   float sr = sample_rate();
   float div = 44.1;
   for (int i = 0; i< slices; ++i)
   {
-    pitches_[i] = sr * result[int(div * (float)i)];
+    pitches_.push_back(sr * result[int(div * (float)i)]);
   }
   return true;
 }
@@ -128,11 +124,10 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
 
 void WAVFile::store_frame(int frame, MySQL& connection)
 {
-  int slices = float(total_samples())/44.1;
   MillisecondRecord* record = ms_table_.new_record();
   record->set("file_index", file_index_);
   record->set("index_in_file", frame);
-  if (frame >= slices)
+  if (frame >= pitches_.size())
   {
     record->set("pitch", 0.0);
   }
