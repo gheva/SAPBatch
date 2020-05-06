@@ -105,7 +105,15 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
   fill_buffer_taper(offset, fft.size(), buffers.in_, 1);
   fft(buffers.in_, buffers.out2_);
 
+  power_spectrum_.clear();
+  time_derivative_.clear();
+  freq_derivative_.clear();
+  float F1 = 0, F2 = 0, F3 = 0, F4 = 0;
+  float po1 = 0, po2 = 0, po3 = 0, po4 = 0;
   // 260 = spectrum range
+  float time_deriv_max = 0, freq_deriv_max = 0, amplitude = 0, max_power = 0;
+  float sum_log = 0, log_sum = 0, peak_freq = 0, log_power = 0;
+  float gravity_center = 0, gc_base = 0, AM = 0;
   for (int i = 0; i < 260; ++i)
   {
     float fReal1, fReal2, fImag1, fImag2;
@@ -118,7 +126,42 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
     power_spectrum_.push_back(power_spec_i);
     float time_deriv_i = -fReal1 * fReal2 - fImag1 * fImag2; 
     float freq_deriv_i = fImag1 * fReal2 - fReal1 * fImag2;
+    time_derivative_.push_back(time_deriv_i);
+    freq_derivative_.push_back(freq_deriv_i);
     // TODO Sono
+    float xx = freq_deriv_i * freq_deriv_i + time_deriv_i * time_deriv_i;
+    xx = sqrt(xx);
+#define SET_POF(from, to, p, f) \
+    if (i < to && i > from) {\
+      if (p < xx) {\
+        p = xx; f = i; \
+      }}
+    SET_POF(5, 50, po1, F1);
+    SET_POF(50, 100, po2, F2);
+    SET_POF(100, 150, po3, F3);
+    SET_POF(149, 260, po4, F4);
+    //if (i >= option->min_entropy_freq && i < option->max_entropy_freq && m_powSpec[i])
+    if (i >= 5 && i < 256 && power_spec_i != 0)
+    {
+      float tmp = time_deriv_i * time_deriv_i;
+      if (tmp > time_deriv_max) time_deriv_max = tmp;
+
+      tmp = freq_deriv_i * freq_deriv_i;
+      if (tmp > freq_deriv_max) freq_deriv_max = tmp;
+
+      if (max_power < power_spec_i)
+      {
+        max_power = power_spec_i;
+        peak_freq = i;
+      } // TODO Maximum
+      amplitude += power_spec_i;
+      log_power = freq_deriv_i * freq_deriv_i + time_deriv_i * time_deriv_i;
+      sum_log += log(power_spec_i);
+      gravity_center += i * log_power;
+      gc_base += log_power;
+      log_sum += power_spec_i;
+      AM += time_deriv_i;
+    }
   }
 }
 
