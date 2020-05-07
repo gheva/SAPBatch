@@ -35,7 +35,7 @@ private:
   bool fill_buffer_taper(uint64_t offset, uint64_t size, float*, unsigned int);
   bool calculate_pitchse();
   void calculate_frame(Fft& fft, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame);
-  void store_frame(int frame, MillisecondRecord* rec, MySQL& connection);
+  void store_frame(MillisecondRecord* rec, MySQL& connection);
 
   AudioFile<float> audio_file_;
   MultiTaper* tapers_;
