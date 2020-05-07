@@ -1,4 +1,5 @@
 #include "wavfile.h"
+#include <algorithm>
 #include <iostream>
 #include <sstream>
 #include <cstdio>
@@ -114,6 +115,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   float time_deriv_max = 0, freq_deriv_max = 0, amplitude = 0, max_power = 0;
   float sum_log = 0, log_sum = 0, peak_freq = 0, log_power = 0;
   float gravity_center = 0, gc_base = 0, AM = 0;
+  float noise_power = 0;
   for (int i = 0; i < 260; ++i)
   {
     float fReal1, fReal2, fImag1, fImag2;
@@ -169,11 +171,18 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
     amplitude = 1;
   }
   AM /= amplitude;
-  AM *= 100;
   if (AM != 0)
   {
-    record->set("AM", AM);
+    record->set("AM", AM * 100);
   }
+  // TODO noise power
+  amplitude = log10(amplitude + 1) * 10 - 70;/*baseline*/
+  noise_power /= std::max(amplitude, float(1.0));
+  if (noise_power > 0.5)/*noise_ratio*/
+  {
+    amplitude = 0;
+  }
+  record->set("amplitude", amplitude * 10);
 
   if (frame >= pitches_.size())
   {
@@ -185,7 +194,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   }
 }
 
-void WAVFile::store_frame(int frame, MillisecondRecord* record, MySQL& connection)
+void WAVFile::store_frame(MillisecondRecord* record, MySQL& connection)
 {
   if (record == nullptr)
   {
@@ -194,7 +203,6 @@ void WAVFile::store_frame(int frame, MillisecondRecord* record, MySQL& connectio
   if (!record->insert(connection))
   {
     std::cerr << connection.error() << std::endl;
-    std::cerr << file_name_ << "," << frame << "," << pitches_[frame] << std::endl;
   }
 }
 
@@ -219,7 +227,7 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
     record->set("file_index", file_index_);
     record->set("index_in_file", index);
     calculate_frame(fft, buffers, offset, record, index);
-    store_frame(index, record, connection);
+    store_frame(record, connection);
     offset += fft.size();
     ++index;
   }
