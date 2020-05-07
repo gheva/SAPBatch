@@ -98,7 +98,7 @@ bool WAVFile::calculate_pitchse()
   return true;
 }
 
-void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
+void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame)
 {
   fill_buffer_taper(offset, fft.size(), buffers.in_, 0);
   fft(buffers.in_, buffers.out1_);
@@ -162,27 +162,34 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset)
       log_sum += power_spec_i;
       AM += time_deriv_i;
     }
+  } // end for frequencies in the frame
+  // TODO pos and fs
+  if (amplitude == 0)
+  {
+    amplitude = 1;
   }
-}
+  AM /= amplitude;
+  AM *= 100;
+  if (AM != 0)
+  {
+    record->set("AM", AM);
+  }
 
-void WAVFile::store_frame(int frame, MySQL& connection)
-{
-  MillisecondRecord* record = ms_table_.new_record();
-  record->set("file_index", file_index_);
-  record->set("index_in_file", frame);
   if (frame >= pitches_.size())
   {
     record->set("pitch", 0.0);
   }
   else
   {
-    if (std::isnan(pitches_[frame]))
-    {
-      ++nans_;
-      pitches_[frame] = 0.0;
-    }
-        
     record->set("pitch", pitches_[frame]);
+  }
+}
+
+void WAVFile::store_frame(int frame, MillisecondRecord* record, MySQL& connection)
+{
+  if (record == nullptr)
+  {
+    return;
   }
   if (!record->insert(connection))
   {
@@ -208,8 +215,11 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
   int index = 0;
   while (offset < total_samples())
   {
-    calculate_frame(fft, buffers, offset);
-    store_frame(index, connection);
+    MillisecondRecord* record = ms_table_.new_record();
+    record->set("file_index", file_index_);
+    record->set("index_in_file", index);
+    calculate_frame(fft, buffers, offset, record, index);
+    store_frame(index, record, connection);
     offset += fft.size();
     ++index;
   }

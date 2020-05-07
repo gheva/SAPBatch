@@ -41,6 +41,7 @@ public:
   std::string create_table();
 
   bool insert(MySQL& connection);
+  Column* get(const std::string& name) { return columns_[name]; }
 
 protected:
   std::unordered_map<std::string, Column*> columns_;

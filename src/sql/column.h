@@ -38,6 +38,7 @@ public:
   virtual void set(int i);
   virtual std::string column_sql();
   virtual std::string value();
+  int int_value() { return value_; }
 private:
   int value_;
 };
@@ -49,6 +50,7 @@ public:
   virtual void set(double d);
   virtual std::string column_sql();
   virtual std::string value();
+  double double_value() { return value_; }
 private:
   double value_;
 };

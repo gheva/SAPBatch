@@ -8,6 +8,7 @@ MillisecondRecord::MillisecondRecord(const std::string table_name) : Record(tabl
   add_column("file_index", TYPE_INT);
   add_column("index_in_file", TYPE_INT);
   add_column("pitch", TYPE_DOUBLE);
+  add_column("AM", TYPE_DOUBLE);
 }
 
 MillisecondRecord::~MillisecondRecord()

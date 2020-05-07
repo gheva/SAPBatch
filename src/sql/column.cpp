@@ -1,5 +1,6 @@
 #include "column.h"
 #include <sstream>
+#include <cmath>
 
 namespace sap
 {
@@ -94,7 +95,14 @@ std::string DoubleColumn::value()
 
 void DoubleColumn::set(double d)
 {
-  value_ = d;
+  if (std::isnan(d))
+  {
+    value_ = 0;
+  }
+  else
+  {
+    value_ = d;
+  }
 }
 
 std::string DoubleColumn::column_sql()
