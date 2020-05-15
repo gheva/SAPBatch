@@ -39,6 +39,11 @@ void Record::set(const std::string& name, int i)
   columns_[name]->set(i);
 }
 
+void Record::set(const std::string& name, long long i)
+{
+  columns_[name]->set(i);
+}
+
 void Record::set(const std::string& name, double d)
 {
   columns_[name]->set(d);

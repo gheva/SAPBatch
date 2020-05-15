@@ -35,6 +35,7 @@ public:
   void add_column(std::string name, types type);
 
   void set(const std::string& name, int i);
+  void set(const std::string& name, long long i);
   void set(const std::string& name, double d);
   void set(const std::string& name, const std::string& s);
 

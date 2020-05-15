@@ -11,6 +11,7 @@ public:
   Column(const std::string& name);
   virtual ~Column();
   virtual void set(int i);
+  virtual void set(long long i);
   virtual void set(double d);
   virtual void set(const std::string& s);
   virtual std::string column_sql();
@@ -36,11 +37,12 @@ class IntColumn : public Column
 public:
   IntColumn(const std::string& name);
   virtual void set(int i);
+  virtual void set(long long i);
   virtual std::string column_sql();
   virtual std::string value();
   int int_value() { return value_; }
 private:
-  int value_;
+  long long value_;
 };
 
 class DoubleColumn : public Column

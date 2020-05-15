@@ -17,6 +17,10 @@ void Column::set(int i)
 {
 }
 
+void Column::set(long long i)
+{
+}
+
 void Column::set(const std::string& s)
 {
 }
@@ -77,6 +81,11 @@ void IntColumn::set(int i)
   value_ = i;
 }
 
+void IntColumn::set(long long i)
+{
+  value_ = i;
+}
+
 std::string IntColumn::column_sql()
 {
   return name_ + " INT";
@@ -89,20 +98,22 @@ DoubleColumn::DoubleColumn(const std::string& name) : Column(name)
 std::string DoubleColumn::value()
 {
   std::stringstream ss;
+  if (std::isnan(value_))
+  {
+    value_ = 0;
+  }
+  // TODO
+  if (std::isinf(value_))
+  {
+    value_ = 0;
+  }
   ss << value_;
   return ss.str();
 }
 
 void DoubleColumn::set(double d)
 {
-  if (std::isnan(d))
-  {
-    value_ = 0;
-  }
-  else
-  {
-    value_ = d;
-  }
+  value_ = d;
 }
 
 std::string DoubleColumn::column_sql()
