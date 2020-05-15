@@ -10,6 +10,7 @@ MillisecondRecord::MillisecondRecord(const std::string table_name) : Record(tabl
   add_column("pitch", TYPE_DOUBLE);
   add_column("AM", TYPE_DOUBLE);
   add_column("amplitude", TYPE_DOUBLE);
+  add_column("mfa", TYPE_DOUBLE);
 }
 
 MillisecondRecord::~MillisecondRecord()

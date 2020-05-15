@@ -143,7 +143,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
     SET_POF(100, 150, po3, F3);
     SET_POF(149, 260, po4, F4);
     //if (i >= option->min_entropy_freq && i < option->max_entropy_freq && m_powSpec[i])
-    if (i >= 5 && i < 256 && power_spec_i != 0)
+    if (i >= 5 && i < 256 && power_spec_i != 0 && std::isnormal(power_spec_i))
     {
       float tmp = time_deriv_i * time_deriv_i;
       if (tmp > time_deriv_max) time_deriv_max = tmp;
@@ -173,16 +173,26 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   AM /= amplitude;
   if (AM != 0)
   {
-    record->set("AM", AM * 100);
+    record->set("AM", (double)(AM * 100));
   }
-  // TODO noise power
   amplitude = log10(amplitude + 1) * 10 - 70;/*baseline*/
   noise_power /= std::max(amplitude, float(1.0));
   if (noise_power > 0.5)/*noise_ratio*/
   {
     amplitude = 0;
   }
-  record->set("amplitude", amplitude * 10);
+  record->set("amplitude", (double)(amplitude * 10));
+  unsigned int mfa_int = gravity_center;
+  double mfa = 0;
+  for (int l = -5; l < 6; ++l)
+  {
+    if (mfa_int > 4 && mfa_int < 200)
+    {
+      mfa += power_spectrum_[mfa_int + l];
+    }
+  }
+  mfa = log10(mfa + 1) * 10 - 70; // baseline
+  record->set("mfa", (double)(mfa * 10));
 
   if (frame >= pitches_.size())
   {
@@ -190,7 +200,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   }
   else
   {
-    record->set("pitch", pitches_[frame]);
+    record->set("pitch", (double)pitches_[frame]);
   }
 }
 
@@ -225,7 +235,7 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
   {
     MillisecondRecord* record = ms_table_.new_record();
     record->set("file_index", file_index_);
-    record->set("index_in_file", index);
+    record->set("index_in_file", (long long)(index + ms_from_midnight_));
     calculate_frame(fft, buffers, offset, record, index);
     store_frame(record, connection);
     offset += fft.size();
