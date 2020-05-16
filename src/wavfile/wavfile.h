@@ -19,7 +19,15 @@ class SynQueue;
 class WAVFile
 {
 public:
-  WAVFile(DirectoryIterator::iterator* iter, const std::string& ms_table_name="Milliseconds", const std::string& file_table_name="FileTable");
+  struct options
+  {
+    std::string ms_table_name;
+    std::string file_table_name;
+    int min_entropy_freq;
+    int max_entropy_freq;
+    int baseline;
+  };
+  WAVFile(DirectoryIterator::iterator* iter, options opts);
   virtual ~WAVFile();
 
   int sample_rate();
@@ -31,6 +39,7 @@ public:
   int nans() { return nans_; }
 protected:
 private:
+  options options_;
 
   bool fill_buffer_taper(uint64_t offset, uint64_t size, float*, unsigned int);
   bool calculate_pitchse();

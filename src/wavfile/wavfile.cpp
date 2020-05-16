@@ -10,7 +10,7 @@
 namespace sap
 {
 
-WAVFile::WAVFile(DirectoryIterator::iterator* iter, const std::string& ms_table, const std::string& file_table_name) : ms_table_(ms_table), file_table_(file_table_name), file_name_(iter->file_name), nans_(0), file_index_(iter->file_index)
+WAVFile::WAVFile(DirectoryIterator::iterator* iter, options opt) : options_(opt), ms_table_(options_.ms_table_name), file_table_(options_.file_table_name), file_name_(iter->file_name), nans_(0), file_index_(iter->file_index)
 {
   audio_file_.load(iter->file_path);
   auto siter = file_name_.find('_');
@@ -142,8 +142,8 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
     SET_POF(50, 100, po2, F2);
     SET_POF(100, 150, po3, F3);
     SET_POF(149, 260, po4, F4);
-    //if (i >= option->min_entropy_freq && i < option->max_entropy_freq && m_powSpec[i])
-    if (i >= 5 && i < 256 && power_spec_i != 0 && std::isnormal(power_spec_i))
+
+    if (i >= options_.min_entropy_freq && i < options_.max_entropy_freq && power_spec_i != 0 && std::isnormal(power_spec_i))
     {
       float tmp = time_deriv_i * time_deriv_i;
       if (tmp > time_deriv_max) time_deriv_max = tmp;
@@ -175,7 +175,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   {
     record->set("AM", (double)(AM * 100));
   }
-  amplitude = log10(amplitude + 1) * 10 - 70;/*baseline*/
+  amplitude = log10(amplitude + 1) * 10 - options_.baseline;
   noise_power /= std::max(amplitude, float(1.0));
   if (noise_power > 0.5)/*noise_ratio*/
   {
@@ -191,7 +191,7 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
       mfa += power_spectrum_[mfa_int + l];
     }
   }
-  mfa = log10(mfa + 1) * 10 - 70; // baseline
+  mfa = log10(mfa + 1) * 10 - options_.baseline;
   record->set("mfa", (double)(mfa * 10));
 
   if (frame >= pitches_.size())

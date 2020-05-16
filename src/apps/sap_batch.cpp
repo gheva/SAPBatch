@@ -15,6 +15,17 @@ using namespace std;
 mutex lock_;
 int* nans;
 
+WAVFile::options options;
+
+void init_options(WAVFile::options& opts)
+{
+  opts.ms_table_name = "Milliseconds";
+  opts.file_table_name = "FileTable";
+  opts.min_entropy_freq = 5;
+  opts.max_entropy_freq = 256;
+  opts.baseline = 70;
+}
+
 void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
 {
   DirectoryIterator::iterator* ptr;
@@ -22,7 +33,7 @@ void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, ff
   {
     cerr << ptr->file_name << "(" << id << ")" << endl;
 
-    WAVFile wav(ptr, "Milliseconds", "FileTable");
+    WAVFile wav(ptr, options);
     wav.add_tapers(tapers);
     wav(fft, *buffers, connection);
     nans[id] += wav.nans();
@@ -33,6 +44,7 @@ void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, ff
 void process(const string& root, int thread_count, vector<MySQL*>& connections)
 {
   DirectoryIterator diriter(root);
+  init_options(options);
   int window_size(44);
   Fft fft(window_size);
   MultiTaper* tapers = new MultiTaper(window_size);
