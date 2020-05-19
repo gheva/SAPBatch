@@ -23,6 +23,7 @@ WAVFile::WAVFile(DirectoryIterator::iterator* iter, options opt) : options_(opt)
   record_->set("file_name", iter->file_name);
   record_->set("file_age", 0.0);
   record_->set("bird_age", 0.0);
+  entropy_range_ = (options_.max_entropy_freq - options_.min_entropy_freq);
 }
 
 WAVFile::~WAVFile()
@@ -99,7 +100,7 @@ bool WAVFile::calculate_pitchse()
   return true;
 }
 
-void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame)
+void WAVFile::calculate_frame(Fft& fft, Fft& cepstrum, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame)
 {
   fill_buffer_taper(offset, fft.size(), buffers.in_, 0);
   fft(buffers.in_, buffers.out1_);
@@ -193,6 +194,54 @@ void WAVFile::calculate_frame(Fft& fft, fft_buffers& buffers, int offset, Millis
   }
   mfa = log10(mfa + 1) * 10 - options_.baseline;
   record->set("mfa", (double)(mfa * 10));
+  // we now compute the features of this fft window:
+  //////////////////////////////////////////////////////////////////////
+  // compute Wiener entropy
+  float entropy(0);
+  if (log_sum != 0)
+  {
+    log_sum = log(log_sum/entropy_range_);
+    entropy = log_sum / entropy_range_ - log_sum;
+  }
+  record->set("entropy", entropy * 100);
+  // Compute FM
+  float FM(0);
+  if (freq_deriv_max != 0 && time_deriv_max != 0)
+  {
+    FM = atan(time_deriv_max / freq_deriv_max);
+  }
+  float sFM(sin(FM)), cFM(cos(FM));
+
+  FM *= 57.2957795; // change units of FM to degrees
+  record->set("FM", FM * 10);
+  memset(buffers.cepst_in_, 0, cepstrum.size() * sizeof(float));
+  for (int i = 7; i < 255; ++i)
+  {
+    float spec_deriv_i = time_derivative_[i] * sFM + freq_derivative_[i] * cFM;
+    float tmp = power_spectrum_[i];
+    buffers.cepst_in_[i] = 0;
+    if (tmp != 0 && i >= options_.min_entropy_freq && i < options_.max_entropy_freq)
+    {
+      buffers.cepst_in_[i] = spec_deriv_i / tmp;
+    }
+  }
+  // run the fft
+  cepstrum(buffers.cepst_in_, buffers.cepst_out_);
+  float pitch_goodness(1);
+  float pitch(1);
+  for (int i = options_.upper_pitch_bound; i < options_.lower_pitch_bound; ++i)
+  {
+    float x, y;
+    x = buffers.cepst_out_[i][0];
+    y = buffers.cepst_out_[i][1];
+    x = x * x + y * y;
+    if (x > pitch_goodness)
+    {
+      pitch_goodness = x;
+      pitch = i;
+    }
+  }
+  record->set("pgoodness", pitch_goodness);
 
   if (frame >= pitches_.size())
   {
@@ -216,7 +265,7 @@ void WAVFile::store_frame(MillisecondRecord* record, MySQL& connection)
   }
 }
 
-bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
+bool WAVFile::operator()(Fft& fft, Fft& cepstrum, fft_buffers& buffers, MySQL& connection)
 {
   if (!record_->insert(connection))
   {
@@ -237,7 +286,7 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
     MillisecondRecord* record = ms_table_.new_record();
     record->set("file_index", file_index_);
     record->set("index_in_file", frame++);
-    calculate_frame(fft, buffers, offset, record, index);
+    calculate_frame(fft, cepstrum, buffers, offset, record, index);
     store_frame(record, connection);
     offset += advance;
     ++index;

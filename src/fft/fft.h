@@ -10,6 +10,8 @@ struct fft_buffers
   float* in_;
   fftwf_complex* out1_;
   fftwf_complex* out2_;
+  float* cepst_in_;
+  fftwf_complex* cepst_out_;
 };
 class Fft
 {

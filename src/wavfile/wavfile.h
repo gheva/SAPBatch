@@ -27,6 +27,8 @@ public:
     int max_entropy_freq;
     int baseline;
     int frame_advance;
+    int upper_pitch_bound;
+    int lower_pitch_bound;
   };
   WAVFile(DirectoryIterator::iterator* iter, options opts);
   virtual ~WAVFile();
@@ -36,7 +38,7 @@ public:
   bool fill_buffer(uint64_t offset, uint64_t size, float*);
   bool read_fully(float** ret);
   void add_tapers(MultiTaper* tapers) { tapers_ = tapers; }
-  bool operator()(Fft& fft, fft_buffers& buffers, MySQL& connection);
+  bool operator()(Fft& fft, Fft& cepstrum, fft_buffers& buffers, MySQL& connection);
   int nans() { return nans_; }
 protected:
 private:
@@ -44,7 +46,7 @@ private:
 
   bool fill_buffer_taper(uint64_t offset, uint64_t size, float*, unsigned int);
   bool calculate_pitchse();
-  void calculate_frame(Fft& fft, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame);
+  void calculate_frame(Fft& fft, Fft& cepstrum, fft_buffers& buffers, int offset, MillisecondRecord* record, int frame);
   void store_frame(MillisecondRecord* rec, MySQL& connection);
 
   AudioFile<float> audio_file_;
@@ -65,6 +67,7 @@ private:
   int hour_;
   int minute_;
   int second_;
+  float entropy_range_;
   std::vector<float> power_spectrum_;
   std::vector<float> time_derivative_;
   std::vector<float> freq_derivative_;
