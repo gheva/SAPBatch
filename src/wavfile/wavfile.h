@@ -26,6 +26,7 @@ public:
     int min_entropy_freq;
     int max_entropy_freq;
     int baseline;
+    int frame_advance;
   };
   WAVFile(DirectoryIterator::iterator* iter, options opts);
   virtual ~WAVFile();

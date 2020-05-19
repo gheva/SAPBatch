@@ -24,6 +24,7 @@ void init_options(WAVFile::options& opts)
   opts.min_entropy_freq = 5;
   opts.max_entropy_freq = 256;
   opts.baseline = 70;
+  opts.frame_advance = 44;
 }
 
 void processor(DirectoryIterator& iter, Fft& fft, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)
@@ -45,7 +46,7 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
 {
   DirectoryIterator diriter(root);
   init_options(options);
-  int window_size(44);
+  int window_size(1024);
   Fft fft(window_size);
   MultiTaper* tapers = new MultiTaper(window_size);
   vector<std::thread> pool;

@@ -229,16 +229,17 @@ bool WAVFile::operator()(Fft& fft, fft_buffers& buffers, MySQL& connection)
     return false;
   }
   int offset = 0;
-  int advance = 44;
+  int advance = options_.frame_advance;
   int index = 0;
+  long long frame(ms_from_midnight_);
   while (offset < total_samples())
   {
     MillisecondRecord* record = ms_table_.new_record();
     record->set("file_index", file_index_);
-    record->set("index_in_file", (long long)(index + ms_from_midnight_));
+    record->set("index_in_file", frame++);
     calculate_frame(fft, buffers, offset, record, index);
     store_frame(record, connection);
-    offset += fft.size();
+    offset += advance;
     ++index;
   }
 
