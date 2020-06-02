@@ -44,11 +44,10 @@ void processor(DirectoryIterator& iter, Fft& fft, Fft& cepst, MultiTaper* tapers
   }
 }
 
-void process(const string& root, int thread_count, vector<MySQL*>& connections)
+void process(const string& root, int thread_count, vector<MySQL*>& connections, int window_size)
 {
   DirectoryIterator diriter(root);
   init_options(options);
-  int window_size(409);
   Fft fft(window_size);
   Fft cepstrum(512);
   MultiTaper* tapers = new MultiTaper(window_size);
@@ -91,20 +90,23 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
 
 int main(int argc, char** argv)
 {
+  int thread_count(4);
+  int window_size(409);
   if (argc < 5)
   {
-    cerr << "Usage: " << argv[0] << " folder user pass db [thread_count]" << endl;
+    cerr << "Usage: " << argv[0] << " folder user pass db [window size] [thread_count]" << endl;
+    cerr << "The default values are:" << endl << "thread_count=" << thread_count << endl << "window_size=" << window_size << endl;
     exit(EXIT_FAILURE);
   }
   string root(argv[1]);
-  int thread_count;
   if (argc == 6)
   {
-    thread_count = atoi(argv[5]);
+    window_size = atoi(argv[5]);
   }
-  else
+
+  if (argc == 7)
   {
-    thread_count = 4;
+    thread_count = atoi(argv[6]);
   }
   MySQL connection(argv[2], argv[3], argv[4]);
   Table<MillisecondRecord> milisecond_table("Milliseconds");
@@ -127,7 +129,7 @@ int main(int argc, char** argv)
     connections.push_back(new MySQL(argv[2], argv[3], argv[4]));
   }
   time_t start = time(nullptr);
-  process(root, thread_count, connections);
+  process(root, thread_count, connections, window_size);
   time_t end = time(nullptr);
 
   cout << "Runtime took " << end - start << " seconds" << endl;
