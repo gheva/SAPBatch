@@ -48,7 +48,7 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections)
 {
   DirectoryIterator diriter(root);
   init_options(options);
-  int window_size(1024);
+  int window_size(409);
   Fft fft(window_size);
   Fft cepstrum(512);
   MultiTaper* tapers = new MultiTaper(window_size);
