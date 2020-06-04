@@ -201,7 +201,7 @@ void WAVFile::calculate_frame(Fft& fft, Fft& cepstrum, fft_buffers& buffers, int
   if (log_sum != 0)
   {
     log_sum = log(log_sum / entropy_range_);
-    entropy = (log_sum / entropy_range_) - log_sum;
+    entropy = (sum_log / entropy_range_) - log_sum;
   }
   record->set("entropy", entropy * 100);
   // Compute FM
