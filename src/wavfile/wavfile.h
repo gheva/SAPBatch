@@ -29,6 +29,8 @@ public:
     int frame_advance;
     int upper_pitch_bound;
     int lower_pitch_bound;
+    int spectrum_range;
+    int yin_min_freq;
   };
   WAVFile(DirectoryIterator::iterator* iter, options opts);
   virtual ~WAVFile();

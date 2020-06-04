@@ -27,6 +27,8 @@ void init_options(WAVFile::options& opts)
   opts.frame_advance = 44;
   opts.upper_pitch_bound = 3;
   opts.lower_pitch_bound = 55;
+  opts.spectrum_range = 260;
+  opts.yin_min_freq = 300;
 }
 
 void processor(DirectoryIterator& iter, Fft& fft, Fft& cepst, MultiTaper* tapers, int id, fft_buffers* buffers, MySQL& connection)

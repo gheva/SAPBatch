@@ -82,7 +82,7 @@ bool WAVFile::read_fully(float** ret)
 
 bool WAVFile::calculate_pitchse()
 {
-  Yin yin(*this, 300);
+  Yin yin(*this, options_.yin_min_freq);
   float* result;
   bool ret = yin(&result);
   if (!ret)
@@ -117,7 +117,7 @@ void WAVFile::calculate_frame(Fft& fft, Fft& cepstrum, fft_buffers& buffers, int
   float sum_log = 0, log_sum = 0, peak_freq = 0, log_power = 0;
   float gravity_center = 0, gc_base = 0, AM = 0;
   float noise_power = 0;
-  for (int i = 0; i < 260; ++i)
+  for (int i = 0; i < options_.spectrum_range; ++i)
   {
     float fReal1, fReal2, fImag1, fImag2;
 
@@ -200,8 +200,8 @@ void WAVFile::calculate_frame(Fft& fft, Fft& cepstrum, fft_buffers& buffers, int
   float entropy(0);
   if (log_sum != 0)
   {
-    log_sum = log(log_sum/entropy_range_);
-    entropy = log_sum / entropy_range_ - log_sum;
+    log_sum = log(log_sum / entropy_range_);
+    entropy = (log_sum / entropy_range_) - log_sum;
   }
   record->set("entropy", entropy * 100);
   // Compute FM
