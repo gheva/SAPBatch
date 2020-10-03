@@ -38,8 +38,10 @@ void processor(DirectoryIterator& iter, Fft& fft, Fft& cepst, MultiTaper* tapers
   {
     cerr << ptr->file_name << "(" << id << ")" << endl;
 
+    // Create a wavfile object to run the calculations
     WAVFile wav(ptr, options);
     wav.add_tapers(tapers);
+    // Run the callculations on this file
     wav(fft, cepst, *buffers, connection);
     nans[id] += wav.nans();
     delete ptr;
@@ -68,6 +70,7 @@ void process(const string& root, int thread_count, vector<MySQL*>& connections, 
     tmp->cepst_in_ = (float*)fftwf_malloc(sizeof(float) * window_size);
     tmp->cepst_out_ = (fftwf_complex*)fftwf_malloc(sizeof(fftwf_complex) * window_size);
     buffers.push_back(tmp);
+    // Start a thread running the processor function
     pool.emplace_back(processor, std::ref(diriter), std::ref(fft), std::ref(cepstrum), tapers, i, buffers[i], std::ref(*connections[i]));
   }
 
