@@ -7,7 +7,7 @@ LIBDIR := lib
 EXEDIR := exe
 THIRD_PARTY_SOURCE := src/third_party
 CMAKE := cmake
-ZIPFILE_NAME := sap_batch_0.0.4.zip
+ZIPFILE_NAME := sap_batch_0.0.5.zip
 sysname=$(shell "uname")
 ifeq "${sysname}" "Darwin"
 ifdef WINDOWS
